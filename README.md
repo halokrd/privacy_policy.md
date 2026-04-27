@@ -37,3 +37,30 @@ Your data is retained as long as you are using the Bot. If you wish to have your
 
 ## 6. Contact Us
 If you have any questions about this Privacy Policy, please join our support server: https://discord.gg/HqxNCtvGum
+
+## CLI Dominos Game
+
+A playable double-six dominos CLI game is available in `src/dominos`.
+
+### Run
+
+```bash
+PYTHONPATH=src python -m dominos.main
+```
+
+### Rules Implemented
+
+- Double-six tile set (`[0|0]` through `[6|6]`) generated uniquely and shuffled.
+- Two players (human + CPU), 7 tiles dealt each.
+- Tiles are legal when either side matches current table ends.
+- Tile orientation auto-rotates when needed for a valid placement.
+- If no playable tile exists, draw from boneyard; pass when boneyard is empty.
+- CPU chooses the playable tile with highest pip total; otherwise draws until playable or empty boneyard.
+- Win when a player's hand reaches zero tiles.
+- Blocked game support when both players cannot play and boneyard is empty; winner decided by lowest remaining pip total.
+
+### Known Limitations
+
+- Single-round game only (no multi-round match scoring).
+- CPU strategy is intentionally simple (highest-pip heuristic).
+- Command-line UX is minimal and text-only.
