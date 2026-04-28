@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+
 from .game import DominosGame
 
 
@@ -11,11 +13,24 @@ def show_hand(game: DominosGame) -> None:
         print(f"  {i}: [{tile.left}|{tile.right}]{suffix}")
 
 
-def handle_player_turn(game: DominosGame) -> None:
+def _print_history(game: DominosGame) -> None:
+    print("\nMove history:")
+    if not game.move_history:
+        print("  (empty)")
+        return
+    for entry in game.move_history[-10:]:
+        print(f"  - {entry}")
+
+
+def handle_player_turn(game: DominosGame) -> DominosGame:
     while True:
         print(f"\n{game.table_state()}")
+        print(game.score_summary())
+        print(game.stats_summary())
         show_hand(game)
-        choice = input("Choose index, D=draw, A=auto-draw, H=hint, Q=quit: ").strip().upper()
+        choice = input(
+            "Choose index, D=draw, A=auto-draw, H=hint, M=moves, S=save, L=load, Q=quit: "
+        ).strip().upper()
 
         if choice == "Q":
             raise SystemExit(0)
@@ -26,6 +41,22 @@ def handle_player_turn(game: DominosGame) -> None:
                 print(f"Hint: playable tile indexes => {playable}")
             else:
                 print("Hint: no playable tiles; draw is recommended.")
+            continue
+
+        if choice == "M":
+            _print_history(game)
+            continue
+
+        if choice == "S":
+            path = input("Save file path [dominos_save.json]: ").strip() or "dominos_save.json"
+            game.save_to_file(path)
+            print(f"Saved game to {path}")
+            continue
+
+        if choice == "L":
+            path = input("Load file path [dominos_save.json]: ").strip() or "dominos_save.json"
+            game = DominosGame.load_from_file(path)
+            print(f"Loaded game from {path}")
             continue
 
         if choice == "A":
@@ -43,7 +74,7 @@ def handle_player_turn(game: DominosGame) -> None:
             break
 
         if not choice.isdigit():
-            print("Invalid input. Enter a tile index, D, A, H, or Q.")
+            print("Invalid input. Enter a tile index, D, A, H, M, S, L, or Q.")
             continue
 
         index = int(choice)
@@ -56,24 +87,48 @@ def handle_player_turn(game: DominosGame) -> None:
         print(result.message)
         if result.played:
             break
+    return game
 
 
 def main() -> None:
-    game = DominosGame()
-    print("Welcome to CLI Dominos (double-six).")
+    parser = argparse.ArgumentParser(description="CLI Dominos")
+    parser.add_argument("--seed", type=int, default=None, help="Deterministic shuffle seed")
+    parser.add_argument("--max-pip", type=int, default=6, help="Highest pip value in tile set")
+    parser.add_argument("--target-score", type=int, default=50, help="Match target score")
+    args = parser.parse_args()
 
-    while not game.game_over():
-        if game.current_turn == "player":
-            handle_player_turn(game)
+    game = DominosGame(seed=args.seed, max_pip=args.max_pip, target_score=args.target_score)
+    print("Welcome to CLI Dominos.")
+
+    while not game.match_over():
+        while not game.game_over():
+            if game.current_turn == "player":
+                game = handle_player_turn(game)
+            else:
+                result = game.play_cpu_turn()
+                print(f"\n{result.message}")
+
+        if game.winner == "draw":
+            print("\nRound over: blocked game ended in a draw.")
         else:
-            result = game.play_cpu_turn()
-            print(f"\n{result.message}")
+            print(f"\nRound over: {game.winner.upper()} wins!")
+        print(game.score_summary())
 
-    if game.winner == "draw":
-        print("\nGame over: blocked game ended in a draw.")
+        if game.match_over():
+            break
+
+        nxt = input("Start next round? (Y/n): ").strip().lower()
+        if nxt not in {"", "y", "yes"}:
+            break
+        game.start_next_round()
+
+    print("\nMatch finished.")
+    if game.player_score > game.cpu_score:
+        print("Overall winner: PLAYER")
+    elif game.cpu_score > game.player_score:
+        print("Overall winner: CPU")
     else:
-        print(f"\nGame over: {game.winner.upper()} wins!")
-    print(game.score_summary())
+        print("Overall result: DRAW")
 
 
 if __name__ == "__main__":

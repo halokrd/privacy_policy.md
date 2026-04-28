@@ -40,7 +40,7 @@ If you have any questions about this Privacy Policy, please join our support ser
 
 ## CLI Dominos Game
 
-A playable double-six dominos CLI game is available in `src/dominos`.
+A playable dominos CLI game is available in `src/dominos`.
 
 ### Run
 
@@ -48,20 +48,33 @@ A playable double-six dominos CLI game is available in `src/dominos`.
 PYTHONPATH=src python -m dominos.main
 ```
 
+Optional arguments:
+
+```bash
+PYTHONPATH=src python -m dominos.main --seed 7 --max-pip 6 --target-score 50
+```
+
+### New Features Added
+
+1. **Configurable tileset size** via `--max-pip` (`double-six` by default).
+2. **Match mode with cumulative scoring** until `--target-score` is reached.
+3. **Save and load game state** from CLI (`S` to save, `L` to load).
+4. **Move history viewer** in CLI (`M`) with recent actions.
+5. **Round stats tracking** (player/CPU draw counts and score summary each turn).
+
 ### Rules Implemented
 
-- Double-six tile set (`[0|0]` through `[6|6]`) generated uniquely and shuffled.
-- Two players (human + CPU), 7 tiles dealt each with seeded-shuffle support in code.
+- Unique tile set generated for `0..max-pip`, shuffled deterministically with optional seed.
+- Two players (human + CPU), up to 7 tiles dealt each depending on set size.
 - Opening move auto-places the highest double found in either hand, then alternates turns.
 - Tile orientation auto-rotates when needed for a valid placement.
 - Tiles are legal when either side matches current table ends; legal sides are shown in hand display.
 - If no playable tile exists, you can draw one (`D`) or auto-draw until playable (`A`); pass when boneyard is empty.
 - CPU chooses the playable tile with highest pip total (double-preferred tie-break), otherwise draws until playable or empty boneyard.
-- Win when a player's hand reaches zero tiles.
+- Win when a hand is empty.
 - Blocked game support when both players cannot play and boneyard is empty; winner decided by lowest remaining pip total.
 
 ### Known Limitations
 
-- Single-round game only (no multi-round match scoring).
-- CPU strategy is intentionally simple (highest-pip heuristic).
-- Command-line UX is text-only (no GUI), but now includes hints (`H`) and playable-side labels.
+- CPU strategy is intentionally simple (highest-pip heuristic with double tie-break).
+- Command-line UX is text-only (no GUI).

@@ -10,8 +10,8 @@ class Domino:
     right: int
 
     def __post_init__(self) -> None:
-        if not (0 <= self.left <= 6 and 0 <= self.right <= 6):
-            raise ValueError("Domino pip values must be between 0 and 6.")
+        if self.left < 0 or self.right < 0:
+            raise ValueError("Domino pip values must be non-negative.")
 
     def is_playable(self, left_end: int, right_end: int) -> bool:
         return self.left in (left_end, right_end) or self.right in (left_end, right_end)
@@ -33,11 +33,17 @@ class Boneyard:
     tiles: list[Domino] = field(default_factory=list)
 
     @classmethod
-    def double_six(cls, should_shuffle: bool = True) -> "Boneyard":
-        tiles = [Domino(left, right) for left in range(7) for right in range(left, 7)]
+    def generate(cls, max_pip: int = 6, should_shuffle: bool = True) -> "Boneyard":
+        if max_pip < 0:
+            raise ValueError("max_pip must be non-negative.")
+        tiles = [Domino(left, right) for left in range(max_pip + 1) for right in range(left, max_pip + 1)]
         if should_shuffle:
             shuffle(tiles)
         return cls(tiles)
+
+    @classmethod
+    def double_six(cls, should_shuffle: bool = True) -> "Boneyard":
+        return cls.generate(max_pip=6, should_shuffle=should_shuffle)
 
     def shuffle_with_rng(self, rng: Random) -> None:
         rng.shuffle(self.tiles)
